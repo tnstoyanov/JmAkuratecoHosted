@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Form</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        form {
+            max-width: 500px;
+            margin: 20px auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .page-title {
+            text-align: center;
+            color: #313131;
+        }
+
+        .amount-presets {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+
+        .preset-btn {
+            background: #00800f;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .preset-btn:hover {
+            background: #1a4296;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        button {
+            font-size: 25px;
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            display: block;
+            margin: 20px auto 0;
+            text-transform: uppercase;
+            width: 100%;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        #loading {
+            display: none;
+            color: #666;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .header {
+            background-color: #2461D6;
+            padding: 10px;
+        }
+
+        input[type="number"] {
+            -moz-appearance: textfield;
+            appearance: textfield;
+        }
+
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+    }
+
+    .modal-content {
+        position: relative;
+        background-color: #fff;
+        margin: 15% auto;
+        padding: 20px;
+        border-radius: 5px;
+        max-width: 400px;
+        text-align: center;
+    }
+
+    .modal-buttons {
+        margin-top: 20px;
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .modal-button {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        width: 180px;
+    }
+
+    .modal-button.ok {
+        background: #246501;
+        color: white;
+    }
+
+    .modal-button.cancel {
+        background: #ce0101;
+        color: rgb(255, 255, 255);
+    }
+
+    .modal-button:hover {
+        opacity: 0.9;
+    }
+    </style>
+</head>
+<div class="header">
+    <img src="https://jmfinancialkw.com/wp-content/uploads/2022/07/Logo-white.svg" alt="JM's logo">
+</div>
+<h1 class="page-title">JM Akurateco Hosted Page Demo</h1>
+<form id="paymentForm">
+    <div class="amount-presets">
+        <button type="button" class="preset-btn" data-amount="100">$100</button>
+        <button type="button" class="preset-btn" data-amount="150">$150</button>
+        <button type="button" class="preset-btn" data-amount="199.99">$199.99</button>
+    </div>
+    <div class="form-group">
+        <label for="amount">Amount (USD):</label>
+        <input type="number" id="amount" min="100.00" max="199.99" step="0.01" value="" required>
+    </div>
+    <button type="submit">Deposit</button>
+    <div id="loading">Processing payment...</div>
+</form>
+
+<script>
+     document.querySelectorAll('.preset-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            document.getElementById('amount').value = this.dataset.amount;
+        });
+    });
+
+    document.getElementById('paymentForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const loading = document.getElementById('loading');
+        const submitButton = this.querySelector('button[type="submit"]');
+        const modal = document.getElementById('redirectModal');
+        let redirectUrl = '';
+
+        try {
+            loading.style.display = 'block';
+            submitButton.disabled = true;
+
+            const customerData = {
+                name: "Tony Stoyanov",
+                email: "tony.stoyanov@tiebreak.dev",
+                amount: parseFloat(document.getElementById('amount').value).toFixed(2),
+                country: "AE",
+                city: "رأس الخيمة",
+                address: "شارع الشمس ١١",
+                zip: "000000",
+                phone: "+971501234567"
+            };
+
+            const response = await fetch('trigger.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(customerData)
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new TypeError("Response was not JSON");
+            }
+
+            const result = await response.json();
+
+            if (result.response && result.response.redirect_url) {
+                redirectUrl = result.response.redirect_url;
+                modal.style.display = 'block';
+            } else if (result.error) {
+                throw new Error(result.error);
+            } else {
+                throw new Error('Payment processing error: Invalid response format');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert(error.message || 'An error occurred. Please try again.');
+        } finally {
+            loading.style.display = 'none';
+            submitButton.disabled = false;
+        }
+
+        // Modal button handlers
+        document.getElementById('modalOk').onclick = function() {
+            modal.style.display = 'none';
+            if (redirectUrl) {
+                window.open(redirectUrl, '_blank');
+            }
+        };
+
+        document.getElementById('modalCancel').onclick = function() {
+            modal.style.display = 'none';
+        };
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        };
+    });
+</script>
+<div id="redirectModal" class="modal">
+    <div class="modal-content">
+        <h2>JM Akurateco will open in a new tab!</h2>
+        <div class="modal-buttons">
+            <button class="modal-button ok" id="modalOk">OK</button>
+            <button class="modal-button cancel" id="modalCancel">Cancel</button>
+        </div>
+    </div>
+</div>
+</body>
+
+</html>
