@@ -51,11 +51,13 @@ class PaymentGateway {
             'merchant_key' => $this->merchantKey,
             'operation' => 'purchase',
             'order' => $order,
+            'session_expiry' => $customerData['session_expiry'] ?? '15',  // 15 min max for each session
             'cancel_url' => 'https://tnstoyanov.wixsite.com/payment-response/cancel',
             'success_url' => 'https://tnstoyanov.wixsite.com/payment-response/success',
             'customer' => [
                 'name' => $customerData['name'],
-                'email' => $customerData['email']
+                'email' => $customerData['email'],
+                'birth_date' => $customerData['birth_date'] ?? ''  // Add this line
             ],
             'billing_address' => [
                 'country' => $customerData['country'],
