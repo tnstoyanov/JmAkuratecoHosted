@@ -57,7 +57,7 @@ class PaymentGateway {
             'customer' => [
                 'name' => $customerData['name'],
                 'email' => $customerData['email'],
-                'birth_date' => $customerData['birth_date'] ?? ''  // Add this line
+                'birth_date' => $customerData['birth_date'] ?? ''  // format: YYYY-MM-DD
             ],
             'billing_address' => [
                 'country' => $customerData['country'],
